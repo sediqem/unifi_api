@@ -3,7 +3,7 @@ defmodule UnifiApi.NetworkTest do
 
   defp test_client(plug) do
     Req.new(
-      base_url: "http://localhost/integration",
+      base_url: "http://localhost",
       headers: [{"x-api-key", "test-key"}],
       plug: plug
     )
@@ -12,14 +12,14 @@ defmodule UnifiApi.NetworkTest do
   defp assert_request(method, path) do
     test_client(fn conn ->
       assert conn.method == method
-      assert conn.request_path == "/integration#{path}"
+      assert conn.request_path == "/proxy/network/integration#{path}"
       Req.Test.json(conn, %{"ok" => true})
     end)
   end
 
   defp stream_client(path) do
     test_client(fn conn ->
-      assert conn.request_path == "/integration#{path}"
+      assert conn.request_path == "/proxy/network/integration#{path}"
       params = Plug.Conn.fetch_query_params(conn).query_params
       offset = String.to_integer(params["offset"] || "0")
 
@@ -35,7 +35,7 @@ defmodule UnifiApi.NetworkTest do
   defp assert_request_with_body(method, path) do
     test_client(fn conn ->
       assert conn.method == method
-      assert conn.request_path == "/integration#{path}"
+      assert conn.request_path == "/proxy/network/integration#{path}"
       {:ok, raw, conn} = Plug.Conn.read_body(conn)
       body = Jason.decode!(raw)
       Req.Test.json(conn, %{"ok" => true, "body" => body})

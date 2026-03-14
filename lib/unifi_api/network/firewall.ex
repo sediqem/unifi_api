@@ -38,7 +38,7 @@ defmodule UnifiApi.Network.Firewall do
       {:ok, zones} = UnifiApi.Network.Firewall.list_zones(client, site_id)
   """
   def list_zones(client, site_id, opts \\ []) do
-    Client.get(client, "/v1/sites/#{site_id}/firewall/zones", opts)
+    Client.get(client, "#{prefix()}/v1/sites/#{site_id}/firewall/zones", opts)
   end
 
   @doc """
@@ -51,7 +51,7 @@ defmodule UnifiApi.Network.Firewall do
       zone["networkIds"] # => ["net-1", "net-2"]
   """
   def get_zone(client, site_id, zone_id) do
-    Client.get(client, "/v1/sites/#{site_id}/firewall/zones/#{zone_id}")
+    Client.get(client, "#{prefix()}/v1/sites/#{site_id}/firewall/zones/#{zone_id}")
   end
 
   @doc """
@@ -65,7 +65,7 @@ defmodule UnifiApi.Network.Firewall do
       })
   """
   def create_zone(client, site_id, body) do
-    Client.post(client, "/v1/sites/#{site_id}/firewall/zones", body)
+    Client.post(client, "#{prefix()}/v1/sites/#{site_id}/firewall/zones", body)
   end
 
   @doc """
@@ -78,7 +78,7 @@ defmodule UnifiApi.Network.Firewall do
       })
   """
   def update_zone(client, site_id, zone_id, body) do
-    Client.put(client, "/v1/sites/#{site_id}/firewall/zones/#{zone_id}", body)
+    Client.put(client, "#{prefix()}/v1/sites/#{site_id}/firewall/zones/#{zone_id}", body)
   end
 
   @doc """
@@ -89,7 +89,7 @@ defmodule UnifiApi.Network.Firewall do
       {:ok, _} = UnifiApi.Network.Firewall.delete_zone(client, site_id, zone_id)
   """
   def delete_zone(client, site_id, zone_id) do
-    Client.delete(client, "/v1/sites/#{site_id}/firewall/zones/#{zone_id}")
+    Client.delete(client, "#{prefix()}/v1/sites/#{site_id}/firewall/zones/#{zone_id}")
   end
 
   # --- Policies ---
@@ -106,7 +106,7 @@ defmodule UnifiApi.Network.Firewall do
       {:ok, policies} = UnifiApi.Network.Firewall.list_policies(client, site_id)
   """
   def list_policies(client, site_id, opts \\ []) do
-    Client.get(client, "/v1/sites/#{site_id}/firewall/policies", opts)
+    Client.get(client, "#{prefix()}/v1/sites/#{site_id}/firewall/policies", opts)
   end
 
   @doc """
@@ -119,7 +119,7 @@ defmodule UnifiApi.Network.Firewall do
       policy["enabled"] # => true
   """
   def get_policy(client, site_id, policy_id) do
-    Client.get(client, "/v1/sites/#{site_id}/firewall/policies/#{policy_id}")
+    Client.get(client, "#{prefix()}/v1/sites/#{site_id}/firewall/policies/#{policy_id}")
   end
 
   @doc """
@@ -136,7 +136,7 @@ defmodule UnifiApi.Network.Firewall do
       })
   """
   def create_policy(client, site_id, body) do
-    Client.post(client, "/v1/sites/#{site_id}/firewall/policies", body)
+    Client.post(client, "#{prefix()}/v1/sites/#{site_id}/firewall/policies", body)
   end
 
   @doc """
@@ -149,7 +149,7 @@ defmodule UnifiApi.Network.Firewall do
       })
   """
   def update_policy(client, site_id, policy_id, body) do
-    Client.put(client, "/v1/sites/#{site_id}/firewall/policies/#{policy_id}", body)
+    Client.put(client, "#{prefix()}/v1/sites/#{site_id}/firewall/policies/#{policy_id}", body)
   end
 
   @doc """
@@ -160,7 +160,7 @@ defmodule UnifiApi.Network.Firewall do
       {:ok, _} = UnifiApi.Network.Firewall.delete_policy(client, site_id, policy_id)
   """
   def delete_policy(client, site_id, policy_id) do
-    Client.delete(client, "/v1/sites/#{site_id}/firewall/policies/#{policy_id}")
+    Client.delete(client, "#{prefix()}/v1/sites/#{site_id}/firewall/policies/#{policy_id}")
   end
 
   @doc """
@@ -172,7 +172,7 @@ defmodule UnifiApi.Network.Firewall do
       |> Enum.map(& &1["name"])
   """
   def stream_zones(client, site_id, opts \\ []) do
-    Client.stream(client, "/v1/sites/#{site_id}/firewall/zones", opts)
+    Client.stream(client, "#{prefix()}/v1/sites/#{site_id}/firewall/zones", opts)
   end
 
   @doc """
@@ -185,6 +185,8 @@ defmodule UnifiApi.Network.Firewall do
       |> Enum.to_list()
   """
   def stream_policies(client, site_id, opts \\ []) do
-    Client.stream(client, "/v1/sites/#{site_id}/firewall/policies", opts)
+    Client.stream(client, "#{prefix()}/v1/sites/#{site_id}/firewall/policies", opts)
   end
+
+  defp prefix, do: Client.network_prefix()
 end

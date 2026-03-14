@@ -19,7 +19,7 @@ defmodule UnifiApi.Network.Wifi do
       {:ok, ssids} = UnifiApi.Network.Wifi.list(client, site_id)
   """
   def list(client, site_id, opts \\ []) do
-    Client.get(client, "/v1/sites/#{site_id}/wifi/broadcasts", opts)
+    Client.get(client, "#{prefix()}/v1/sites/#{site_id}/wifi/broadcasts", opts)
   end
 
   @doc """
@@ -36,6 +36,8 @@ defmodule UnifiApi.Network.Wifi do
       |> Enum.to_list()
   """
   def stream(client, site_id, opts \\ []) do
-    Client.stream(client, "/v1/sites/#{site_id}/wifi/broadcasts", opts)
+    Client.stream(client, "#{prefix()}/v1/sites/#{site_id}/wifi/broadcasts", opts)
   end
+
+  defp prefix, do: Client.network_prefix()
 end

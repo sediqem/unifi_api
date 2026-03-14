@@ -29,7 +29,7 @@ defmodule UnifiApi.Network.DNS do
       {:ok, policies} = UnifiApi.Network.DNS.list(client, site_id)
   """
   def list(client, site_id, opts \\ []) do
-    Client.get(client, "/v1/sites/#{site_id}/dns/policies", opts)
+    Client.get(client, "#{prefix()}/v1/sites/#{site_id}/dns/policies", opts)
   end
 
   @doc """
@@ -40,7 +40,7 @@ defmodule UnifiApi.Network.DNS do
       {:ok, policy} = UnifiApi.Network.DNS.get(client, site_id, policy_id)
   """
   def get(client, site_id, policy_id) do
-    Client.get(client, "/v1/sites/#{site_id}/dns/policies/#{policy_id}")
+    Client.get(client, "#{prefix()}/v1/sites/#{site_id}/dns/policies/#{policy_id}")
   end
 
   @doc """
@@ -63,7 +63,7 @@ defmodule UnifiApi.Network.DNS do
       })
   """
   def create(client, site_id, body) do
-    Client.post(client, "/v1/sites/#{site_id}/dns/policies", body)
+    Client.post(client, "#{prefix()}/v1/sites/#{site_id}/dns/policies", body)
   end
 
   @doc """
@@ -76,7 +76,7 @@ defmodule UnifiApi.Network.DNS do
       })
   """
   def update(client, site_id, policy_id, body) do
-    Client.put(client, "/v1/sites/#{site_id}/dns/policies/#{policy_id}", body)
+    Client.put(client, "#{prefix()}/v1/sites/#{site_id}/dns/policies/#{policy_id}", body)
   end
 
   @doc """
@@ -87,7 +87,7 @@ defmodule UnifiApi.Network.DNS do
       {:ok, _} = UnifiApi.Network.DNS.delete(client, site_id, policy_id)
   """
   def delete(client, site_id, policy_id) do
-    Client.delete(client, "/v1/sites/#{site_id}/dns/policies/#{policy_id}")
+    Client.delete(client, "#{prefix()}/v1/sites/#{site_id}/dns/policies/#{policy_id}")
   end
 
   @doc """
@@ -99,6 +99,8 @@ defmodule UnifiApi.Network.DNS do
       |> Enum.group_by(& &1["type"])
   """
   def stream(client, site_id, opts \\ []) do
-    Client.stream(client, "/v1/sites/#{site_id}/dns/policies", opts)
+    Client.stream(client, "#{prefix()}/v1/sites/#{site_id}/dns/policies", opts)
   end
+
+  defp prefix, do: Client.network_prefix()
 end

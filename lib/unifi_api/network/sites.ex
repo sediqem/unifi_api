@@ -25,7 +25,7 @@ defmodule UnifiApi.Network.Sites do
       site_id = site["id"]
   """
   def list(client, opts \\ []) do
-    Client.get(client, "/v1/sites", opts)
+    Client.get(client, "#{prefix()}/v1/sites", opts)
   end
 
   @doc """
@@ -42,6 +42,8 @@ defmodule UnifiApi.Network.Sites do
       |> Enum.to_list()
   """
   def stream(client, opts \\ []) do
-    Client.stream(client, "/v1/sites", opts)
+    Client.stream(client, "#{prefix()}/v1/sites", opts)
   end
+
+  defp prefix, do: Client.network_prefix()
 end

@@ -23,7 +23,10 @@ end
 config :unifi_api,
   base_url: "https://192.168.1.1",
   api_key: "your-api-key",
-  verify_ssl: false
+  verify_ssl: false,
+  # UDM defaults — for Cloud Key, set both to "/integration"
+  network_path: "/proxy/network/integration",
+  protect_path: "/proxy/protect/integration"
 ```
 
 ### Environment variables
@@ -33,16 +36,35 @@ config :unifi_api,
 config :unifi_api,
   base_url: System.get_env("UNIFI_BASE_URL", "https://192.168.1.1"),
   api_key: System.get_env("UNIFI_API_KEY", ""),
-  verify_ssl: System.get_env("UNIFI_VERIFY_SSL", "false") == "true"
+  verify_ssl: System.get_env("UNIFI_VERIFY_SSL", "false") == "true",
+  network_path: System.get_env("UNIFI_NETWORK_PATH", "/proxy/network/integration"),
+  protect_path: System.get_env("UNIFI_PROTECT_PATH", "/proxy/protect/integration")
+```
+
+### Path prefixes
+
+On **UDM / UDM Pro / UDM SE** (UniFi OS), the API runs behind a reverse proxy:
+
+| API | Default path | Env var |
+|-----|-------------|---------|
+| Network | `/proxy/network/integration` | `UNIFI_NETWORK_PATH` |
+| Protect | `/proxy/protect/integration` | `UNIFI_PROTECT_PATH` |
+
+On **Cloud Key** or standalone controllers, set both to `"/integration"`:
+
+```elixir
+config :unifi_api,
+  network_path: "/integration",
+  protect_path: "/integration"
 ```
 
 ### Runtime override
 
-You can also pass options directly when creating a client, which override application config:
+Pass options directly when creating a client to override application config:
 
 ```elixir
 client = UnifiApi.new(
-  base_url: "https://10.0.0.1",
+  base_url: "https://192.168.0.1",
   api_key: "my-api-key",
   verify_ssl: false
 )

@@ -12,8 +12,6 @@ defmodule UnifiApi.Client do
       UnifiApi.Network.Sites.list(client)
   """
 
-  @base_path "/integration"
-
   @doc """
   Creates a new API client.
 
@@ -32,10 +30,31 @@ defmodule UnifiApi.Client do
         else: [transport_opts: [verify: :verify_none]]
 
     Req.new(
-      base_url: base_url <> @base_path,
+      base_url: base_url,
       headers: [{"x-api-key", api_key}],
-      connect_options: connect_opts
+      connect_options: connect_opts,
+      redirect: false
     )
+  end
+
+  @doc """
+  Returns the Network API path prefix.
+
+  Defaults to `"/proxy/network/integration"` (UDM). For non-UDM setups
+  (Cloud Key), configure `network_path: "/integration"` in application config.
+  """
+  def network_prefix do
+    Application.get_env(:unifi_api, :network_path, "/proxy/network/integration")
+  end
+
+  @doc """
+  Returns the Protect API path prefix.
+
+  Defaults to `"/proxy/protect/integration"` (UDM). For non-UDM setups
+  (Cloud Key), configure `protect_path: "/integration"` in application config.
+  """
+  def protect_prefix do
+    Application.get_env(:unifi_api, :protect_path, "/proxy/protect/integration")
   end
 
   @doc """

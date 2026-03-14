@@ -3,7 +3,7 @@ defmodule UnifiApi.ProtectTest do
 
   defp test_client(plug) do
     Req.new(
-      base_url: "http://localhost/integration",
+      base_url: "http://localhost",
       headers: [{"x-api-key", "test-key"}],
       plug: plug
     )
@@ -12,7 +12,7 @@ defmodule UnifiApi.ProtectTest do
   defp assert_request(method, path) do
     test_client(fn conn ->
       assert conn.method == method
-      assert conn.request_path == "/integration#{path}"
+      assert conn.request_path == "/proxy/protect/integration#{path}"
       Req.Test.json(conn, %{"ok" => true})
     end)
   end
@@ -20,7 +20,7 @@ defmodule UnifiApi.ProtectTest do
   defp assert_request_with_body(method, path) do
     test_client(fn conn ->
       assert conn.method == method
-      assert conn.request_path == "/integration#{path}"
+      assert conn.request_path == "/proxy/protect/integration#{path}"
       {:ok, raw, conn} = Plug.Conn.read_body(conn)
       body = Jason.decode!(raw)
       Req.Test.json(conn, %{"ok" => true, "body" => body})
@@ -51,7 +51,7 @@ defmodule UnifiApi.ProtectTest do
       client =
         test_client(fn conn ->
           assert conn.method == "GET"
-          assert conn.request_path == "/integration/v1/cameras/cam-1/snapshot"
+          assert conn.request_path == "/proxy/protect/integration/v1/cameras/cam-1/snapshot"
 
           conn
           |> Plug.Conn.put_resp_content_type("image/jpeg")

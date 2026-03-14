@@ -21,6 +21,8 @@ defmodule UnifiApi.Protect.Cameras do
 
   alias UnifiApi.Client
 
+  defp prefix, do: Client.protect_prefix()
+
   @doc """
   Lists all cameras.
 
@@ -29,7 +31,7 @@ defmodule UnifiApi.Protect.Cameras do
       {:ok, cameras} = UnifiApi.Protect.Cameras.list(client)
   """
   def list(client) do
-    Client.get(client, "/v1/cameras")
+    Client.get(client, "#{prefix()}/v1/cameras")
   end
 
   @doc """
@@ -42,7 +44,7 @@ defmodule UnifiApi.Protect.Cameras do
       camera["state"] # => "CONNECTED"
   """
   def get(client, id) do
-    Client.get(client, "/v1/cameras/#{id}")
+    Client.get(client, "#{prefix()}/v1/cameras/#{id}")
   end
 
   @doc """
@@ -58,7 +60,7 @@ defmodule UnifiApi.Protect.Cameras do
       })
   """
   def update(client, id, body) do
-    Client.patch(client, "/v1/cameras/#{id}", body)
+    Client.patch(client, "#{prefix()}/v1/cameras/#{id}", body)
   end
 
   @doc """
@@ -78,7 +80,7 @@ defmodule UnifiApi.Protect.Cameras do
       {:ok, jpeg} = UnifiApi.Protect.Cameras.snapshot(client, camera_id, high_quality: true)
   """
   def snapshot(client, id, opts \\ []) do
-    Client.get_raw(client, "/v1/cameras/#{id}/snapshot", opts)
+    Client.get_raw(client, "#{prefix()}/v1/cameras/#{id}/snapshot", opts)
   end
 
   @doc """
@@ -89,7 +91,7 @@ defmodule UnifiApi.Protect.Cameras do
       {:ok, _} = UnifiApi.Protect.Cameras.ptz_patrol_start(client, camera_id, 0)
   """
   def ptz_patrol_start(client, id, slot) do
-    Client.post(client, "/v1/cameras/#{id}/ptz/patrol/start/#{slot}", %{})
+    Client.post(client, "#{prefix()}/v1/cameras/#{id}/ptz/patrol/start/#{slot}", %{})
   end
 
   @doc """
@@ -100,7 +102,7 @@ defmodule UnifiApi.Protect.Cameras do
       {:ok, _} = UnifiApi.Protect.Cameras.ptz_patrol_stop(client, camera_id)
   """
   def ptz_patrol_stop(client, id) do
-    Client.post(client, "/v1/cameras/#{id}/ptz/patrol/stop", %{})
+    Client.post(client, "#{prefix()}/v1/cameras/#{id}/ptz/patrol/stop", %{})
   end
 
   @doc """
@@ -111,6 +113,6 @@ defmodule UnifiApi.Protect.Cameras do
       {:ok, _} = UnifiApi.Protect.Cameras.ptz_goto(client, camera_id, 1)
   """
   def ptz_goto(client, id, slot) do
-    Client.post(client, "/v1/cameras/#{id}/ptz/goto/#{slot}", %{})
+    Client.post(client, "#{prefix()}/v1/cameras/#{id}/ptz/goto/#{slot}", %{})
   end
 end

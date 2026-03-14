@@ -14,6 +14,8 @@ defmodule UnifiApi.Protect.Viewers do
 
   alias UnifiApi.Client
 
+  defp prefix, do: Client.protect_prefix()
+
   @doc """
   Lists all viewers.
 
@@ -22,7 +24,7 @@ defmodule UnifiApi.Protect.Viewers do
       {:ok, viewers} = UnifiApi.Protect.Viewers.list(client)
   """
   def list(client) do
-    Client.get(client, "/v1/viewers")
+    Client.get(client, "#{prefix()}/v1/viewers")
   end
 
   @doc """
@@ -35,7 +37,7 @@ defmodule UnifiApi.Protect.Viewers do
       viewer["state"] # => "CONNECTED"
   """
   def get(client, id) do
-    Client.get(client, "/v1/viewers/#{id}")
+    Client.get(client, "#{prefix()}/v1/viewers/#{id}")
   end
 
   @doc """
@@ -48,6 +50,6 @@ defmodule UnifiApi.Protect.Viewers do
       })
   """
   def update(client, id, body) do
-    Client.patch(client, "/v1/viewers/#{id}", body)
+    Client.patch(client, "#{prefix()}/v1/viewers/#{id}", body)
   end
 end

@@ -20,7 +20,7 @@ defmodule UnifiApi.Network.Networks do
       {:ok, networks} = UnifiApi.Network.Networks.list(client, site_id)
   """
   def list(client, site_id, opts \\ []) do
-    Client.get(client, "/v1/sites/#{site_id}/networks", opts)
+    Client.get(client, "#{prefix()}/v1/sites/#{site_id}/networks", opts)
   end
 
   @doc """
@@ -33,7 +33,7 @@ defmodule UnifiApi.Network.Networks do
       network["vlanId"] # => 1
   """
   def get(client, site_id, network_id) do
-    Client.get(client, "/v1/sites/#{site_id}/networks/#{network_id}")
+    Client.get(client, "#{prefix()}/v1/sites/#{site_id}/networks/#{network_id}")
   end
 
   @doc """
@@ -47,7 +47,7 @@ defmodule UnifiApi.Network.Networks do
       })
   """
   def create(client, site_id, body) do
-    Client.post(client, "/v1/sites/#{site_id}/networks", body)
+    Client.post(client, "#{prefix()}/v1/sites/#{site_id}/networks", body)
   end
 
   @doc """
@@ -60,7 +60,7 @@ defmodule UnifiApi.Network.Networks do
       })
   """
   def update(client, site_id, network_id, body) do
-    Client.put(client, "/v1/sites/#{site_id}/networks/#{network_id}", body)
+    Client.put(client, "#{prefix()}/v1/sites/#{site_id}/networks/#{network_id}", body)
   end
 
   @doc """
@@ -71,7 +71,7 @@ defmodule UnifiApi.Network.Networks do
       {:ok, _} = UnifiApi.Network.Networks.delete(client, site_id, network_id)
   """
   def delete(client, site_id, network_id, opts \\ []) do
-    Client.delete(client, "/v1/sites/#{site_id}/networks/#{network_id}", opts)
+    Client.delete(client, "#{prefix()}/v1/sites/#{site_id}/networks/#{network_id}", opts)
   end
 
   @doc """
@@ -88,6 +88,8 @@ defmodule UnifiApi.Network.Networks do
       |> Enum.map(& &1["name"])
   """
   def stream(client, site_id, opts \\ []) do
-    Client.stream(client, "/v1/sites/#{site_id}/networks", opts)
+    Client.stream(client, "#{prefix()}/v1/sites/#{site_id}/networks", opts)
   end
+
+  defp prefix, do: Client.network_prefix()
 end

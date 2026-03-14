@@ -8,7 +8,7 @@ defmodule UnifiApi do
       client = UnifiApi.new()
 
       # Using explicit options
-      client = UnifiApi.new(base_url: "https://192.168.1.1", api_key: "my-key")
+      client = UnifiApi.new(base_url: "https://192.168.0.1", api_key: "my-key")
 
       # Network API
       {:ok, sites} = UnifiApi.Network.Sites.list(client)
@@ -21,11 +21,16 @@ defmodule UnifiApi do
 
   Configure via application environment or pass options to `new/1`:
 
-      # config/config.exs
       config :unifi_api,
-        base_url: "https://192.168.1.1",
+        base_url: "https://192.168.0.1",
         api_key: "your-api-key",
-        verify_ssl: false
+        verify_ssl: false,
+        network_path: "/proxy/network/integration",
+        protect_path: "/proxy/protect/integration"
+
+  On UDM/UDM Pro/UDM SE the API runs behind a reverse proxy at
+  `/proxy/network/integration` (Network) and `/proxy/protect/integration`
+  (Protect). For Cloud Key, set both paths to `"/integration"`.
 
   Options passed to `new/1` override application config.
   """
@@ -33,9 +38,12 @@ defmodule UnifiApi do
   @doc """
   Creates a new API client.
 
+  A single client works for both Network and Protect APIs — the path
+  prefix is resolved per-module from application config.
+
   ## Options
 
-    * `:base_url` — UniFi controller URL (e.g. `"https://192.168.1.1"`)
+    * `:base_url` — UniFi controller URL (e.g. `"https://192.168.0.1"`)
     * `:api_key` — API key for authentication
     * `:verify_ssl` — whether to verify SSL certificates (default: `false`)
 
@@ -45,10 +53,11 @@ defmodule UnifiApi do
       client = UnifiApi.new()
 
       # With explicit options
-      client = UnifiApi.new(base_url: "https://10.0.0.1", api_key: "abc123")
+      client = UnifiApi.new(base_url: "https://192.168.0.1", api_key: "abc123")
 
-      # With SSL verification enabled
-      client = UnifiApi.new(base_url: "https://unifi.example.com", api_key: "key", verify_ssl: true)
+      # Same client works for both APIs
+      UnifiApi.Network.Sites.list(client)
+      UnifiApi.Protect.Cameras.list(client)
   """
   defdelegate new(opts \\ []), to: UnifiApi.Client
 end

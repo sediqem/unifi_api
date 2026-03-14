@@ -27,7 +27,7 @@ defmodule UnifiApi.Network.ACL do
       {:ok, rules} = UnifiApi.Network.ACL.list(client, site_id)
   """
   def list(client, site_id, opts \\ []) do
-    Client.get(client, "/v1/sites/#{site_id}/acl-rules", opts)
+    Client.get(client, "#{prefix()}/v1/sites/#{site_id}/acl-rules", opts)
   end
 
   @doc """
@@ -40,7 +40,7 @@ defmodule UnifiApi.Network.ACL do
       rule["type"]   # => "IPV4"
   """
   def get(client, site_id, rule_id) do
-    Client.get(client, "/v1/sites/#{site_id}/acl-rules/#{rule_id}")
+    Client.get(client, "#{prefix()}/v1/sites/#{site_id}/acl-rules/#{rule_id}")
   end
 
   @doc """
@@ -57,7 +57,7 @@ defmodule UnifiApi.Network.ACL do
       })
   """
   def create(client, site_id, body) do
-    Client.post(client, "/v1/sites/#{site_id}/acl-rules", body)
+    Client.post(client, "#{prefix()}/v1/sites/#{site_id}/acl-rules", body)
   end
 
   @doc """
@@ -68,7 +68,7 @@ defmodule UnifiApi.Network.ACL do
       {:ok, _} = UnifiApi.Network.ACL.update(client, site_id, rule_id, %{enabled: false})
   """
   def update(client, site_id, rule_id, body) do
-    Client.put(client, "/v1/sites/#{site_id}/acl-rules/#{rule_id}", body)
+    Client.put(client, "#{prefix()}/v1/sites/#{site_id}/acl-rules/#{rule_id}", body)
   end
 
   @doc """
@@ -79,7 +79,7 @@ defmodule UnifiApi.Network.ACL do
       {:ok, _} = UnifiApi.Network.ACL.delete(client, site_id, rule_id)
   """
   def delete(client, site_id, rule_id) do
-    Client.delete(client, "/v1/sites/#{site_id}/acl-rules/#{rule_id}")
+    Client.delete(client, "#{prefix()}/v1/sites/#{site_id}/acl-rules/#{rule_id}")
   end
 
   @doc """
@@ -91,7 +91,7 @@ defmodule UnifiApi.Network.ACL do
       # => %{"ids" => ["rule-1", "rule-2", "rule-3"]}
   """
   def get_ordering(client, site_id) do
-    Client.get(client, "/v1/sites/#{site_id}/acl-rules/ordering")
+    Client.get(client, "#{prefix()}/v1/sites/#{site_id}/acl-rules/ordering")
   end
 
   @doc """
@@ -104,7 +104,7 @@ defmodule UnifiApi.Network.ACL do
       })
   """
   def update_ordering(client, site_id, body) do
-    Client.put(client, "/v1/sites/#{site_id}/acl-rules/ordering", body)
+    Client.put(client, "#{prefix()}/v1/sites/#{site_id}/acl-rules/ordering", body)
   end
 
   @doc """
@@ -117,6 +117,8 @@ defmodule UnifiApi.Network.ACL do
       |> Enum.to_list()
   """
   def stream(client, site_id, opts \\ []) do
-    Client.stream(client, "/v1/sites/#{site_id}/acl-rules", opts)
+    Client.stream(client, "#{prefix()}/v1/sites/#{site_id}/acl-rules", opts)
   end
+
+  defp prefix, do: Client.network_prefix()
 end

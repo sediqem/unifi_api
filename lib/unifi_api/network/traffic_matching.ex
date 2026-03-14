@@ -26,7 +26,7 @@ defmodule UnifiApi.Network.TrafficMatching do
       # => [%{"id" => "...", "type" => "PORTS", "name" => "HTTP/HTTPS"}]
   """
   def list(client, site_id, opts \\ []) do
-    Client.get(client, "/v1/sites/#{site_id}/traffic-matching-lists", opts)
+    Client.get(client, "#{prefix()}/v1/sites/#{site_id}/traffic-matching-lists", opts)
   end
 
   @doc """
@@ -38,6 +38,8 @@ defmodule UnifiApi.Network.TrafficMatching do
       |> Enum.to_list()
   """
   def stream(client, site_id, opts \\ []) do
-    Client.stream(client, "/v1/sites/#{site_id}/traffic-matching-lists", opts)
+    Client.stream(client, "#{prefix()}/v1/sites/#{site_id}/traffic-matching-lists", opts)
   end
+
+  defp prefix, do: Client.network_prefix()
 end

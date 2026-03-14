@@ -14,6 +14,8 @@ defmodule UnifiApi.Protect.Liveviews do
 
   alias UnifiApi.Client
 
+  defp prefix, do: Client.protect_prefix()
+
   @doc """
   Lists all liveviews.
 
@@ -25,6 +27,6 @@ defmodule UnifiApi.Protect.Liveviews do
       default = Enum.find(liveviews, & &1["isDefault"])
   """
   def list(client) do
-    Client.get(client, "/v1/liveviews")
+    Client.get(client, "#{prefix()}/v1/liveviews")
   end
 end

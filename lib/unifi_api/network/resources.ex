@@ -9,6 +9,8 @@ defmodule UnifiApi.Network.Resources do
 
   alias UnifiApi.Client
 
+  defp prefix, do: Client.network_prefix()
+
   @doc """
   Lists WAN interfaces on a site.
 
@@ -21,7 +23,7 @@ defmodule UnifiApi.Network.Resources do
       {:ok, wans} = UnifiApi.Network.Resources.list_wans(client, site_id)
   """
   def list_wans(client, site_id, opts \\ []) do
-    Client.get(client, "/v1/sites/#{site_id}/wans", opts)
+    Client.get(client, "#{prefix()}/v1/sites/#{site_id}/wans", opts)
   end
 
   @doc """
@@ -36,7 +38,7 @@ defmodule UnifiApi.Network.Resources do
       {:ok, tunnels} = UnifiApi.Network.Resources.list_vpn_tunnels(client, site_id)
   """
   def list_vpn_tunnels(client, site_id, opts \\ []) do
-    Client.get(client, "/v1/sites/#{site_id}/vpn/site-to-site-tunnels", opts)
+    Client.get(client, "#{prefix()}/v1/sites/#{site_id}/vpn/site-to-site-tunnels", opts)
   end
 
   @doc """
@@ -51,7 +53,7 @@ defmodule UnifiApi.Network.Resources do
       {:ok, servers} = UnifiApi.Network.Resources.list_vpn_servers(client, site_id)
   """
   def list_vpn_servers(client, site_id, opts \\ []) do
-    Client.get(client, "/v1/sites/#{site_id}/vpn/servers", opts)
+    Client.get(client, "#{prefix()}/v1/sites/#{site_id}/vpn/servers", opts)
   end
 
   @doc """
@@ -66,7 +68,7 @@ defmodule UnifiApi.Network.Resources do
       {:ok, profiles} = UnifiApi.Network.Resources.list_radius_profiles(client, site_id)
   """
   def list_radius_profiles(client, site_id, opts \\ []) do
-    Client.get(client, "/v1/sites/#{site_id}/radius/profiles", opts)
+    Client.get(client, "#{prefix()}/v1/sites/#{site_id}/radius/profiles", opts)
   end
 
   @doc """
@@ -81,7 +83,7 @@ defmodule UnifiApi.Network.Resources do
       {:ok, tags} = UnifiApi.Network.Resources.list_device_tags(client, site_id)
   """
   def list_device_tags(client, site_id, opts \\ []) do
-    Client.get(client, "/v1/sites/#{site_id}/device-tags", opts)
+    Client.get(client, "#{prefix()}/v1/sites/#{site_id}/device-tags", opts)
   end
 
   @doc """
@@ -96,7 +98,7 @@ defmodule UnifiApi.Network.Resources do
       {:ok, categories} = UnifiApi.Network.Resources.list_dpi_categories(client)
   """
   def list_dpi_categories(client, opts \\ []) do
-    Client.get(client, "/v1/dpi/categories", opts)
+    Client.get(client, "#{prefix()}/v1/dpi/categories", opts)
   end
 
   @doc """
@@ -111,7 +113,7 @@ defmodule UnifiApi.Network.Resources do
       {:ok, apps} = UnifiApi.Network.Resources.list_dpi_applications(client)
   """
   def list_dpi_applications(client, opts \\ []) do
-    Client.get(client, "/v1/dpi/applications", opts)
+    Client.get(client, "#{prefix()}/v1/dpi/applications", opts)
   end
 
   @doc """
@@ -126,7 +128,7 @@ defmodule UnifiApi.Network.Resources do
       {:ok, countries} = UnifiApi.Network.Resources.list_countries(client)
   """
   def list_countries(client, opts \\ []) do
-    Client.get(client, "/v1/countries", opts)
+    Client.get(client, "#{prefix()}/v1/countries", opts)
   end
 
   @doc """
@@ -137,7 +139,7 @@ defmodule UnifiApi.Network.Resources do
       UnifiApi.Network.Resources.stream_wans(client, site_id) |> Enum.to_list()
   """
   def stream_wans(client, site_id, opts \\ []) do
-    Client.stream(client, "/v1/sites/#{site_id}/wans", opts)
+    Client.stream(client, "#{prefix()}/v1/sites/#{site_id}/wans", opts)
   end
 
   @doc """
@@ -148,7 +150,7 @@ defmodule UnifiApi.Network.Resources do
       UnifiApi.Network.Resources.stream_vpn_tunnels(client, site_id) |> Enum.to_list()
   """
   def stream_vpn_tunnels(client, site_id, opts \\ []) do
-    Client.stream(client, "/v1/sites/#{site_id}/vpn/site-to-site-tunnels", opts)
+    Client.stream(client, "#{prefix()}/v1/sites/#{site_id}/vpn/site-to-site-tunnels", opts)
   end
 
   @doc """
@@ -159,7 +161,7 @@ defmodule UnifiApi.Network.Resources do
       UnifiApi.Network.Resources.stream_vpn_servers(client, site_id) |> Enum.to_list()
   """
   def stream_vpn_servers(client, site_id, opts \\ []) do
-    Client.stream(client, "/v1/sites/#{site_id}/vpn/servers", opts)
+    Client.stream(client, "#{prefix()}/v1/sites/#{site_id}/vpn/servers", opts)
   end
 
   @doc """
@@ -170,7 +172,7 @@ defmodule UnifiApi.Network.Resources do
       UnifiApi.Network.Resources.stream_radius_profiles(client, site_id) |> Enum.to_list()
   """
   def stream_radius_profiles(client, site_id, opts \\ []) do
-    Client.stream(client, "/v1/sites/#{site_id}/radius/profiles", opts)
+    Client.stream(client, "#{prefix()}/v1/sites/#{site_id}/radius/profiles", opts)
   end
 
   @doc """
@@ -181,7 +183,7 @@ defmodule UnifiApi.Network.Resources do
       UnifiApi.Network.Resources.stream_device_tags(client, site_id) |> Enum.to_list()
   """
   def stream_device_tags(client, site_id, opts \\ []) do
-    Client.stream(client, "/v1/sites/#{site_id}/device-tags", opts)
+    Client.stream(client, "#{prefix()}/v1/sites/#{site_id}/device-tags", opts)
   end
 
   @doc """
@@ -192,7 +194,7 @@ defmodule UnifiApi.Network.Resources do
       UnifiApi.Network.Resources.stream_dpi_categories(client) |> Enum.to_list()
   """
   def stream_dpi_categories(client, opts \\ []) do
-    Client.stream(client, "/v1/dpi/categories", opts)
+    Client.stream(client, "#{prefix()}/v1/dpi/categories", opts)
   end
 
   @doc """
@@ -203,7 +205,7 @@ defmodule UnifiApi.Network.Resources do
       UnifiApi.Network.Resources.stream_dpi_applications(client) |> Enum.to_list()
   """
   def stream_dpi_applications(client, opts \\ []) do
-    Client.stream(client, "/v1/dpi/applications", opts)
+    Client.stream(client, "#{prefix()}/v1/dpi/applications", opts)
   end
 
   @doc """
@@ -214,6 +216,6 @@ defmodule UnifiApi.Network.Resources do
       UnifiApi.Network.Resources.stream_countries(client) |> Enum.to_list()
   """
   def stream_countries(client, opts \\ []) do
-    Client.stream(client, "/v1/countries", opts)
+    Client.stream(client, "#{prefix()}/v1/countries", opts)
   end
 end

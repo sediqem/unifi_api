@@ -17,6 +17,8 @@ defmodule UnifiApi.Network.Info do
       # => "10.1.84"
   """
   def get_info(client) do
-    Client.get(client, "/v1/info")
+    Client.get(client, "#{prefix()}/v1/info")
   end
+
+  defp prefix, do: Client.network_prefix()
 end

@@ -12,6 +12,8 @@ defmodule UnifiApi.Protect.NVR do
 
   alias UnifiApi.Client
 
+  defp prefix, do: Client.protect_prefix()
+
   @doc """
   Gets NVR information.
 
@@ -22,6 +24,6 @@ defmodule UnifiApi.Protect.NVR do
       nvr["doorbellSettings"] # => %{"defaultMessageText" => "Welcome", ...}
   """
   def get(client) do
-    Client.get(client, "/v1/nvrs")
+    Client.get(client, "#{prefix()}/v1/nvrs")
   end
 end

@@ -31,7 +31,7 @@ defmodule UnifiApi.Network.Clients do
       {:ok, page} = UnifiApi.Network.Clients.list(client, site_id, limit: 50, offset: 0)
   """
   def list(client, site_id, opts \\ []) do
-    Client.get(client, "/v1/sites/#{site_id}/clients", opts)
+    Client.get(client, "#{prefix()}/v1/sites/#{site_id}/clients", opts)
   end
 
   @doc """
@@ -53,6 +53,8 @@ defmodule UnifiApi.Network.Clients do
       |> Enum.count()
   """
   def stream(client, site_id, opts \\ []) do
-    Client.stream(client, "/v1/sites/#{site_id}/clients", opts)
+    Client.stream(client, "#{prefix()}/v1/sites/#{site_id}/clients", opts)
   end
+
+  defp prefix, do: Client.network_prefix()
 end

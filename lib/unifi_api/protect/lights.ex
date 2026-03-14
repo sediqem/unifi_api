@@ -16,6 +16,8 @@ defmodule UnifiApi.Protect.Lights do
 
   alias UnifiApi.Client
 
+  defp prefix, do: Client.protect_prefix()
+
   @doc """
   Lists all lights.
 
@@ -27,6 +29,6 @@ defmodule UnifiApi.Protect.Lights do
       on_lights = Enum.filter(lights, & &1["isLightOn"])
   """
   def list(client) do
-    Client.get(client, "/v1/lights")
+    Client.get(client, "#{prefix()}/v1/lights")
   end
 end

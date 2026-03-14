@@ -14,6 +14,8 @@ defmodule UnifiApi.Protect.Chimes do
 
   alias UnifiApi.Client
 
+  defp prefix, do: Client.protect_prefix()
+
   @doc """
   Lists all chimes.
 
@@ -22,6 +24,6 @@ defmodule UnifiApi.Protect.Chimes do
       {:ok, chimes} = UnifiApi.Protect.Chimes.list(client)
   """
   def list(client) do
-    Client.get(client, "/v1/chimes")
+    Client.get(client, "#{prefix()}/v1/chimes")
   end
 end

@@ -16,6 +16,8 @@ defmodule UnifiApi.Protect.Sensors do
 
   alias UnifiApi.Client
 
+  defp prefix, do: Client.protect_prefix()
+
   @doc """
   Lists all sensors.
 
@@ -32,6 +34,6 @@ defmodule UnifiApi.Protect.Sensors do
       end)
   """
   def list(client) do
-    Client.get(client, "/v1/sensors")
+    Client.get(client, "#{prefix()}/v1/sensors")
   end
 end

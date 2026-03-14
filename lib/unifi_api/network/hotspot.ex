@@ -27,7 +27,7 @@ defmodule UnifiApi.Network.Hotspot do
       {:ok, vouchers} = UnifiApi.Network.Hotspot.list_vouchers(client, site_id)
   """
   def list_vouchers(client, site_id, opts \\ []) do
-    Client.get(client, "/v1/sites/#{site_id}/hotspot/vouchers", opts)
+    Client.get(client, "#{prefix()}/v1/sites/#{site_id}/hotspot/vouchers", opts)
   end
 
   @doc """
@@ -40,7 +40,7 @@ defmodule UnifiApi.Network.Hotspot do
       voucher["expired"] # => false
   """
   def get_voucher(client, site_id, voucher_id) do
-    Client.get(client, "/v1/sites/#{site_id}/hotspot/vouchers/#{voucher_id}")
+    Client.get(client, "#{prefix()}/v1/sites/#{site_id}/hotspot/vouchers/#{voucher_id}")
   end
 
   @doc """
@@ -69,7 +69,7 @@ defmodule UnifiApi.Network.Hotspot do
       })
   """
   def create_vouchers(client, site_id, body) do
-    Client.post(client, "/v1/sites/#{site_id}/hotspot/vouchers", body)
+    Client.post(client, "#{prefix()}/v1/sites/#{site_id}/hotspot/vouchers", body)
   end
 
   @doc """
@@ -80,7 +80,7 @@ defmodule UnifiApi.Network.Hotspot do
       {:ok, _} = UnifiApi.Network.Hotspot.delete_vouchers(client, site_id)
   """
   def delete_vouchers(client, site_id) do
-    Client.delete(client, "/v1/sites/#{site_id}/hotspot/vouchers")
+    Client.delete(client, "#{prefix()}/v1/sites/#{site_id}/hotspot/vouchers")
   end
 
   @doc """
@@ -91,7 +91,7 @@ defmodule UnifiApi.Network.Hotspot do
       {:ok, _} = UnifiApi.Network.Hotspot.delete_voucher(client, site_id, voucher_id)
   """
   def delete_voucher(client, site_id, voucher_id) do
-    Client.delete(client, "/v1/sites/#{site_id}/hotspot/vouchers/#{voucher_id}")
+    Client.delete(client, "#{prefix()}/v1/sites/#{site_id}/hotspot/vouchers/#{voucher_id}")
   end
 
   @doc """
@@ -105,6 +105,8 @@ defmodule UnifiApi.Network.Hotspot do
       |> Enum.map(& &1["code"])
   """
   def stream_vouchers(client, site_id, opts \\ []) do
-    Client.stream(client, "/v1/sites/#{site_id}/hotspot/vouchers", opts)
+    Client.stream(client, "#{prefix()}/v1/sites/#{site_id}/hotspot/vouchers", opts)
   end
+
+  defp prefix, do: Client.network_prefix()
 end

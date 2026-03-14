@@ -5,7 +5,7 @@ defmodule UnifiApi.ClientTest do
 
   defp test_client(plug) do
     Req.new(
-      base_url: "http://localhost/integration",
+      base_url: "http://localhost",
       headers: [{"x-api-key", "test-key"}],
       plug: plug,
       retry: false
@@ -31,7 +31,7 @@ defmodule UnifiApi.ClientTest do
       assert {:ok, %{"key" => "secret123"}} = Client.get(client, "/v1/info")
     end
 
-    test "sets base_url with /integration path" do
+    test "sets base_url without path prefix" do
       client =
         Client.new(base_url: "http://localhost", api_key: "k")
         |> Req.merge(
@@ -40,7 +40,7 @@ defmodule UnifiApi.ClientTest do
           end
         )
 
-      assert {:ok, %{"path" => "/integration/v1/info"}} = Client.get(client, "/v1/info")
+      assert {:ok, %{"path" => "/v1/info"}} = Client.get(client, "/v1/info")
     end
   end
 

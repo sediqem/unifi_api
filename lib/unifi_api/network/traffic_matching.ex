@@ -1,0 +1,31 @@
+defmodule UnifiApi.Network.TrafficMatching do
+  @moduledoc """
+  UniFi Network API — traffic matching lists.
+
+  Lists available traffic matching definitions used in firewall and ACL rules.
+
+  ## Types
+
+    * `PORTS` — port-based matching
+    * `IPV4_ADDRESSES` — IPv4 address matching
+    * `IPV6_ADDRESSES` — IPv6 address matching
+  """
+
+  alias UnifiApi.Client
+
+  @doc """
+  Lists all traffic matching lists on a site.
+
+  ## Options
+
+  Supports pagination: `:offset`, `:limit`, `:filter`.
+
+  ## Examples
+
+      {:ok, lists} = UnifiApi.Network.TrafficMatching.list(client, site_id)
+      # => [%{"id" => "...", "type" => "PORTS", "name" => "HTTP/HTTPS"}]
+  """
+  def list(client, site_id, opts \\ []) do
+    Client.get(client, "/v1/sites/#{site_id}/traffic-matching-lists", opts)
+  end
+end

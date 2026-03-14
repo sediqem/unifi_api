@@ -1,0 +1,176 @@
+defmodule UnifiApi.Client do
+  @moduledoc """
+  HTTP client wrapper for UniFi API requests.
+
+  This module handles authentication, base URL construction, SSL settings,
+  pagination parameters, and response normalization. All API modules delegate
+  to this client for HTTP operations.
+
+  Typically you create a client via `UnifiApi.new/1` and pass it to API functions:
+
+      client = UnifiApi.new(base_url: "https://192.168.1.1", api_key: "my-key")
+      UnifiApi.Network.Sites.list(client)
+  """
+
+  @base_path "/integration"
+
+  @doc """
+  Creates a new API client.
+
+  See `UnifiApi.new/1` for options and examples.
+  """
+  def new(opts \\ []) do
+    base_url = opts[:base_url] || Application.get_env(:unifi_api, :base_url)
+    api_key = opts[:api_key] || Application.get_env(:unifi_api, :api_key)
+
+    verify_ssl =
+      Keyword.get(opts, :verify_ssl, Application.get_env(:unifi_api, :verify_ssl, false))
+
+    connect_opts =
+      if verify_ssl,
+        do: [],
+        else: [transport_opts: [verify: :verify_none]]
+
+    Req.new(
+      base_url: base_url <> @base_path,
+      headers: [{"x-api-key", api_key}],
+      connect_options: connect_opts
+    )
+  end
+
+  @doc """
+  Performs a GET request.
+
+  ## Options
+
+    * `:offset` — pagination offset (default: 0)
+    * `:limit` — page size (default: 25, max: 200)
+    * `:filter` — UniFi filter expression (e.g. `"type.eq(WIRELESS)"`)
+
+  ## Examples
+
+      Client.get(client, "/v1/sites")
+      Client.get(client, "/v1/sites/abc/clients", limit: 50, offset: 100)
+      Client.get(client, "/v1/sites/abc/clients", filter: "type.eq(WIRED)")
+  """
+  def get(client, path, opts \\ []) do
+    params = build_params(opts)
+
+    client
+    |> Req.get(url: path, params: params)
+    |> handle_response()
+  end
+
+  @doc """
+  Performs a POST request with a JSON body.
+
+  ## Examples
+
+      Client.post(client, "/v1/sites/abc/networks", %{name: "Guest"})
+  """
+  def post(client, path, body, opts \\ []) do
+    params = build_params(opts)
+
+    client
+    |> Req.post(url: path, json: body, params: params)
+    |> handle_response()
+  end
+
+  @doc """
+  Performs a PUT request with a JSON body.
+
+  ## Examples
+
+      Client.put(client, "/v1/sites/abc/networks/net-1", %{name: "Updated"})
+  """
+  def put(client, path, body, opts \\ []) do
+    params = build_params(opts)
+
+    client
+    |> Req.put(url: path, json: body, params: params)
+    |> handle_response()
+  end
+
+  @doc """
+  Performs a PATCH request with a JSON body.
+
+  ## Examples
+
+      Client.patch(client, "/v1/cameras/cam-1", %{name: "Front Door"})
+  """
+  def patch(client, path, body, opts \\ []) do
+    params = build_params(opts)
+
+    client
+    |> Req.patch(url: path, json: body, params: params)
+    |> handle_response()
+  end
+
+  @doc """
+  Performs a DELETE request.
+
+  ## Examples
+
+      Client.delete(client, "/v1/sites/abc/networks/net-1")
+  """
+  def delete(client, path, opts \\ []) do
+    params = build_params(opts)
+
+    client
+    |> Req.delete(url: path, params: params)
+    |> handle_response()
+  end
+
+  @doc """
+  Performs a GET request returning the raw (non-JSON-decoded) body.
+
+  Used for binary responses like camera snapshots.
+
+  ## Options
+
+    * `:high_quality` — request high-quality snapshot (boolean)
+
+  ## Examples
+
+      {:ok, jpeg_binary} = Client.get_raw(client, "/v1/cameras/cam-1/snapshot")
+      {:ok, jpeg_binary} = Client.get_raw(client, "/v1/cameras/cam-1/snapshot", high_quality: true)
+  """
+  def get_raw(client, path, opts \\ []) do
+    params = build_params(opts)
+
+    case Req.get(client, url: path, params: params) do
+      {:ok, %Req.Response{status: status, body: body}} when status in 200..299 ->
+        {:ok, body}
+
+      {:ok, %Req.Response{status: status, body: body}} ->
+        {:error, {status, body}}
+
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
+  defp build_params(opts) do
+    []
+    |> maybe_add(:offset, opts[:offset])
+    |> maybe_add(:limit, opts[:limit])
+    |> maybe_add(:filter, opts[:filter])
+    |> maybe_add(:highQuality, opts[:high_quality])
+  end
+
+  defp maybe_add(params, _key, nil), do: params
+  defp maybe_add(params, key, value), do: [{key, value} | params]
+
+  defp handle_response({:ok, %Req.Response{status: status, body: body}})
+       when status in 200..299 do
+    {:ok, body}
+  end
+
+  defp handle_response({:ok, %Req.Response{status: status, body: body}}) do
+    {:error, {status, body}}
+  end
+
+  defp handle_response({:error, reason}) do
+    {:error, reason}
+  end
+end

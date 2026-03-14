@@ -9,7 +9,7 @@ Add `unifi_api` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:unifi_api, "~> 0.1.0"}
+    {:unifi_api, "~> 0.2.0"}
   ]
 end
 ```
@@ -758,6 +758,46 @@ end)
 |> Stream.run()
 ```
 
+## Formatted Output
+
+`UnifiApi.Formatter` prints API responses as colored ANSI tables in iex.
+
+### Quick shortcuts
+
+```elixir
+{:ok, sites} = UnifiApi.Network.Sites.list(client)
+UnifiApi.Formatter.sites(sites)
+
+{:ok, devices} = UnifiApi.Network.Devices.list(client, site_id)
+UnifiApi.Formatter.devices(devices)
+# State column is color-coded: green=CONNECTED, yellow=CONNECTING, red=DISCONNECTED
+
+{:ok, clients} = UnifiApi.Network.Clients.list(client, site_id)
+UnifiApi.Formatter.clients(clients)
+# Type column is color-coded: blue=WIRED, magenta=WIRELESS, cyan=VPN
+
+{:ok, cameras} = UnifiApi.Protect.Cameras.list(protect)
+UnifiApi.Formatter.cameras(cameras)
+
+{:ok, networks} = UnifiApi.Network.Networks.list(client, site_id)
+UnifiApi.Formatter.networks(networks)
+```
+
+### Custom tables
+
+```elixir
+# Pick any columns
+{:ok, devices} = UnifiApi.Network.Devices.list(client, site_id)
+UnifiApi.Formatter.table(devices, ["name", "mac", "model", "state", "ip"],
+  title: "My Devices",
+  colors: %{"state" => :state}
+)
+
+# Detail view for a single record
+{:ok, nvr} = UnifiApi.Protect.NVR.get(protect)
+UnifiApi.Formatter.detail(nvr, title: "NVR Info")
+```
+
 ## Error Handling
 
 All functions return `{:ok, body}` on success or `{:error, reason}` on failure:
@@ -788,4 +828,4 @@ open doc/index.html
 
 ## License
 
-MIT
+Apache License 2.0 — see [LICENSE](LICENSE) for details.

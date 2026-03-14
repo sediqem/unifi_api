@@ -4,12 +4,15 @@ defmodule UnifiApi.MixProject do
   def project do
     [
       app: :unifi_api,
-      version: "0.1.0",
+      version: "0.2.0",
       elixir: "~> 1.19",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       name: "UnifiApi",
-      source_url: "https://github.com/nmaroulis/unifi_api",
+      description: "Elixir client for UniFi Dream Machine APIs (Network & Protect)",
+      source_url: "https://github.com/nyo16/unifi_api",
+      homepage_url: "https://github.com/nyo16/unifi_api",
+      package: package(),
       docs: docs()
     ]
   end
@@ -23,10 +26,17 @@ defmodule UnifiApi.MixProject do
   end
 
   # Run "mix help deps" to learn about dependencies.
+  defp package do
+    [
+      licenses: ["Apache-2.0"],
+      links: %{"GitHub" => "https://github.com/nyo16/unifi_api"}
+    ]
+  end
+
   defp docs do
     [
       main: "readme",
-      extras: ["README.md"],
+      extras: ["README.md", "LICENSE"],
       groups_for_modules: [
         "Network API": [
           UnifiApi.Network.Info,
@@ -41,6 +51,9 @@ defmodule UnifiApi.MixProject do
           UnifiApi.Network.DNS,
           UnifiApi.Network.TrafficMatching,
           UnifiApi.Network.Resources
+        ],
+        Utilities: [
+          UnifiApi.Formatter
         ],
         "Protect API": [
           UnifiApi.Protect.Cameras,

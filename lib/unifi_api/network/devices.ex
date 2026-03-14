@@ -112,4 +112,34 @@ defmodule UnifiApi.Network.Devices do
   def list_pending(client, opts \\ []) do
     Client.get(client, "/v1/pending-devices", opts)
   end
+
+  @doc """
+  Returns a lazy stream that auto-paginates through all devices on a site.
+
+  ## Options
+
+    * `:limit` — items per page (default: 200)
+    * `:filter` — UniFi filter expression
+
+  ## Examples
+
+      UnifiApi.Network.Devices.stream(client, site_id)
+      |> Stream.filter(& &1["state"] == "CONNECTED")
+      |> Enum.to_list()
+  """
+  def stream(client, site_id, opts \\ []) do
+    Client.stream(client, "/v1/sites/#{site_id}/devices", opts)
+  end
+
+  @doc """
+  Returns a lazy stream that auto-paginates through pending devices.
+
+  ## Examples
+
+      UnifiApi.Network.Devices.stream_pending(client)
+      |> Enum.to_list()
+  """
+  def stream_pending(client, opts \\ []) do
+    Client.stream(client, "/v1/pending-devices", opts)
+  end
 end

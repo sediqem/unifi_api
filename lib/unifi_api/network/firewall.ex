@@ -162,4 +162,29 @@ defmodule UnifiApi.Network.Firewall do
   def delete_policy(client, site_id, policy_id) do
     Client.delete(client, "/v1/sites/#{site_id}/firewall/policies/#{policy_id}")
   end
+
+  @doc """
+  Returns a lazy stream that auto-paginates through all firewall zones.
+
+  ## Examples
+
+      UnifiApi.Network.Firewall.stream_zones(client, site_id)
+      |> Enum.map(& &1["name"])
+  """
+  def stream_zones(client, site_id, opts \\ []) do
+    Client.stream(client, "/v1/sites/#{site_id}/firewall/zones", opts)
+  end
+
+  @doc """
+  Returns a lazy stream that auto-paginates through all firewall policies.
+
+  ## Examples
+
+      UnifiApi.Network.Firewall.stream_policies(client, site_id)
+      |> Stream.filter(& &1["enabled"])
+      |> Enum.to_list()
+  """
+  def stream_policies(client, site_id, opts \\ []) do
+    Client.stream(client, "/v1/sites/#{site_id}/firewall/policies", opts)
+  end
 end

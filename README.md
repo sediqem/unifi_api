@@ -349,25 +349,78 @@ File.write!("snapshot.jpg", jpeg)
 # Each has: id, name, state, cameraIds, ringSettings
 ```
 
-## Pagination & Filtering
+## Streaming & Pagination
 
-List endpoints on the Network API support pagination and filtering:
+Every list endpoint has a `stream` variant that returns a lazy `Stream` powered by
+`Stream.resource/3`. Pages are fetched on demand — no data is pulled until you
+consume the stream with `Enum` or `Stream` functions.
+
+### Lazy streaming (recommended)
 
 ```elixir
-# Paginate
+# Stream ALL devices across pages — fetches 200 per page automatically
+UnifiApi.Network.Devices.stream(client, site_id)
+|> Enum.to_list()
+
+# Only the first page is fetched
+UnifiApi.Network.Devices.stream(client, site_id)
+|> Enum.take(5)
+
+# Filter + stream — composable with the full Stream/Enum API
+UnifiApi.Network.Clients.stream(client, site_id, filter: "type.eq(WIRELESS)")
+|> Stream.map(& &1["name"])
+|> Enum.to_list()
+
+# Count all clients without loading them all into memory at once
+UnifiApi.Network.Clients.stream(client, site_id)
+|> Enum.count()
+
+# Custom page size
+UnifiApi.Network.Devices.stream(client, site_id, limit: 50)
+|> Enum.to_list()
+
+# Stream firewall policies, vouchers, ACL rules, DNS, etc.
+UnifiApi.Network.Firewall.stream_policies(client, site_id)
+|> Stream.filter(& &1["enabled"])
+|> Enum.to_list()
+
+UnifiApi.Network.Hotspot.stream_vouchers(client, site_id)
+|> Stream.reject(& &1["expired"])
+|> Enum.map(& &1["code"])
+
+UnifiApi.Network.Resources.stream_dpi_categories(client)
+|> Enum.to_list()
+```
+
+Stream functions raise on API errors, making them safe to compose in pipelines.
+
+### Available stream functions
+
+| Module | Function |
+|--------|----------|
+| Sites | `stream/2` |
+| Devices | `stream/3`, `stream_pending/2` |
+| Clients | `stream/3` |
+| Networks | `stream/3` |
+| Wifi | `stream/3` |
+| Firewall | `stream_zones/3`, `stream_policies/3` |
+| Hotspot | `stream_vouchers/3` |
+| ACL | `stream/3` |
+| DNS | `stream/3` |
+| TrafficMatching | `stream/3` |
+| Resources | `stream_wans/3`, `stream_vpn_tunnels/3`, `stream_vpn_servers/3`, `stream_radius_profiles/3`, `stream_device_tags/3`, `stream_dpi_categories/2`, `stream_dpi_applications/2`, `stream_countries/2` |
+
+### Manual pagination
+
+If you need per-page control, use `list` with `:offset` and `:limit`:
+
+```elixir
 {:ok, page1} = UnifiApi.Network.Devices.list(client, site_id, limit: 50, offset: 0)
 {:ok, page2} = UnifiApi.Network.Devices.list(client, site_id, limit: 50, offset: 50)
 
 # Filter (UniFi filter expression syntax)
 {:ok, wireless} = UnifiApi.Network.Clients.list(client, site_id,
   filter: "type.eq(WIRELESS)"
-)
-
-# Combine
-{:ok, results} = UnifiApi.Network.Clients.list(client, site_id,
-  filter: "type.eq(WIRED)",
-  limit: 10,
-  offset: 0
 )
 ```
 
@@ -396,13 +449,12 @@ Common patterns for pulling structured data out of your UniFi controller.
 
 ```elixir
 client = UnifiApi.new()
-{:ok, sites} = UnifiApi.Network.Sites.list(client)
 
 all_clients =
-  sites
+  UnifiApi.Network.Sites.stream(client)
   |> Enum.flat_map(fn site ->
-    {:ok, clients} = UnifiApi.Network.Clients.list(client, site["id"], limit: 200)
-    Enum.map(clients, &Map.put(&1, "site", site["name"]))
+    UnifiApi.Network.Clients.stream(client, site["id"])
+    |> Enum.map(&Map.put(&1, "site", site["name"]))
   end)
 
 # Filter only wireless clients
@@ -413,15 +465,16 @@ wireless = Enum.filter(all_clients, &(&1["type"] == "WIRELESS"))
 
 ```elixir
 client = UnifiApi.new()
-{:ok, sites} = UnifiApi.Network.Sites.list(client)
 
 rows =
-  for site <- sites,
-      {:ok, devices} <- [UnifiApi.Network.Devices.list(client, site["id"], limit: 200)],
-      device <- devices do
-    [site["name"], device["name"], device["mac"], device["model"], device["state"]]
-    |> Enum.join(",")
-  end
+  UnifiApi.Network.Sites.stream(client)
+  |> Enum.flat_map(fn site ->
+    UnifiApi.Network.Devices.stream(client, site["id"])
+    |> Enum.map(fn device ->
+      [site["name"], device["name"], device["mac"], device["model"], device["state"]]
+      |> Enum.join(",")
+    end)
+  end)
 
 csv = ["site,name,mac,model,state" | rows] |> Enum.join("\n")
 File.write!("devices.csv", csv)
@@ -449,18 +502,20 @@ end
 
 ```elixir
 client = UnifiApi.new()
-{:ok, sites} = UnifiApi.Network.Sites.list(client)
 
 topology =
-  Enum.map(sites, fn site ->
+  UnifiApi.Network.Sites.stream(client)
+  |> Enum.map(fn site ->
     sid = site["id"]
-    {:ok, networks} = UnifiApi.Network.Networks.list(client, sid, limit: 200)
-    {:ok, devices} = UnifiApi.Network.Devices.list(client, sid, limit: 200)
 
     %{
       site: site["name"],
-      networks: Enum.map(networks, &Map.take(&1, ["id", "name", "vlanId", "subnet"])),
-      devices: Enum.map(devices, &Map.take(&1, ["id", "name", "mac", "model", "state"]))
+      networks:
+        UnifiApi.Network.Networks.stream(client, sid)
+        |> Enum.map(&Map.take(&1, ["id", "name", "vlanId", "subnet"])),
+      devices:
+        UnifiApi.Network.Devices.stream(client, sid)
+        |> Enum.map(&Map.take(&1, ["id", "name", "mac", "model", "state"]))
     }
   end)
 ```
@@ -469,15 +524,13 @@ topology =
 
 ```elixir
 client = UnifiApi.new()
-{:ok, [site | _]} = UnifiApi.Network.Sites.list(client)
+[site | _] = UnifiApi.Network.Sites.stream(client) |> Enum.take(1)
 
 # Poll every 60 seconds
 Stream.interval(60_000)
 |> Stream.map(fn _ ->
-  {:ok, clients} = UnifiApi.Network.Clients.list(client, site["id"], limit: 200)
-
   counts =
-    clients
+    UnifiApi.Network.Clients.stream(client, site["id"])
     |> Enum.group_by(& &1["type"])
     |> Map.new(fn {type, list} -> {type, length(list)} end)
 
@@ -493,33 +546,32 @@ end)
 
 ```elixir
 client = UnifiApi.new()
-{:ok, sites} = UnifiApi.Network.Sites.list(client)
 
-for site <- sites do
+UnifiApi.Network.Sites.stream(client)
+|> Enum.map(fn site ->
   sid = site["id"]
-  {:ok, zones} = UnifiApi.Network.Firewall.list_zones(client, sid, limit: 200)
-  {:ok, policies} = UnifiApi.Network.Firewall.list_policies(client, sid, limit: 200)
 
   %{
     site: site["name"],
-    zones: Enum.map(zones, &Map.take(&1, ["id", "name", "networkIds"])),
+    zones:
+      UnifiApi.Network.Firewall.stream_zones(client, sid)
+      |> Enum.map(&Map.take(&1, ["id", "name", "networkIds"])),
     policies:
-      Enum.map(policies, &Map.take(&1, ["id", "name", "enabled", "action", "source", "destination"]))
+      UnifiApi.Network.Firewall.stream_policies(client, sid)
+      |> Enum.map(&Map.take(&1, ["id", "name", "enabled", "action", "source", "destination"]))
   }
-end
+end)
 ```
 
 ### Export hotspot voucher codes
 
 ```elixir
 client = UnifiApi.new()
-{:ok, [site | _]} = UnifiApi.Network.Sites.list(client)
-
-{:ok, vouchers} = UnifiApi.Network.Hotspot.list_vouchers(client, site["id"], limit: 200)
+[site | _] = UnifiApi.Network.Sites.stream(client) |> Enum.take(1)
 
 active =
-  vouchers
-  |> Enum.reject(& &1["expired"])
+  UnifiApi.Network.Hotspot.stream_vouchers(client, site["id"])
+  |> Stream.reject(& &1["expired"])
   |> Enum.map(&Map.take(&1, ["code", "name", "timeLimitMinutes", "expiresAt"]))
 
 # Print as a table

@@ -89,4 +89,16 @@ defmodule UnifiApi.Network.DNS do
   def delete(client, site_id, policy_id) do
     Client.delete(client, "/v1/sites/#{site_id}/dns/policies/#{policy_id}")
   end
+
+  @doc """
+  Returns a lazy stream that auto-paginates through all DNS policies.
+
+  ## Examples
+
+      UnifiApi.Network.DNS.stream(client, site_id)
+      |> Enum.group_by(& &1["type"])
+  """
+  def stream(client, site_id, opts \\ []) do
+    Client.stream(client, "/v1/sites/#{site_id}/dns/policies", opts)
+  end
 end

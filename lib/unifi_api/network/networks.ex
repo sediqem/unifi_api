@@ -73,4 +73,21 @@ defmodule UnifiApi.Network.Networks do
   def delete(client, site_id, network_id, opts \\ []) do
     Client.delete(client, "/v1/sites/#{site_id}/networks/#{network_id}", opts)
   end
+
+  @doc """
+  Returns a lazy stream that auto-paginates through all networks on a site.
+
+  ## Options
+
+    * `:limit` — items per page (default: 200)
+    * `:filter` — UniFi filter expression
+
+  ## Examples
+
+      UnifiApi.Network.Networks.stream(client, site_id)
+      |> Enum.map(& &1["name"])
+  """
+  def stream(client, site_id, opts \\ []) do
+    Client.stream(client, "/v1/sites/#{site_id}/networks", opts)
+  end
 end

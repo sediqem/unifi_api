@@ -128,4 +128,92 @@ defmodule UnifiApi.Network.Resources do
   def list_countries(client, opts \\ []) do
     Client.get(client, "/v1/countries", opts)
   end
+
+  @doc """
+  Returns a lazy stream that auto-paginates through all WANs.
+
+  ## Examples
+
+      UnifiApi.Network.Resources.stream_wans(client, site_id) |> Enum.to_list()
+  """
+  def stream_wans(client, site_id, opts \\ []) do
+    Client.stream(client, "/v1/sites/#{site_id}/wans", opts)
+  end
+
+  @doc """
+  Returns a lazy stream that auto-paginates through all VPN tunnels.
+
+  ## Examples
+
+      UnifiApi.Network.Resources.stream_vpn_tunnels(client, site_id) |> Enum.to_list()
+  """
+  def stream_vpn_tunnels(client, site_id, opts \\ []) do
+    Client.stream(client, "/v1/sites/#{site_id}/vpn/site-to-site-tunnels", opts)
+  end
+
+  @doc """
+  Returns a lazy stream that auto-paginates through all VPN servers.
+
+  ## Examples
+
+      UnifiApi.Network.Resources.stream_vpn_servers(client, site_id) |> Enum.to_list()
+  """
+  def stream_vpn_servers(client, site_id, opts \\ []) do
+    Client.stream(client, "/v1/sites/#{site_id}/vpn/servers", opts)
+  end
+
+  @doc """
+  Returns a lazy stream that auto-paginates through all RADIUS profiles.
+
+  ## Examples
+
+      UnifiApi.Network.Resources.stream_radius_profiles(client, site_id) |> Enum.to_list()
+  """
+  def stream_radius_profiles(client, site_id, opts \\ []) do
+    Client.stream(client, "/v1/sites/#{site_id}/radius/profiles", opts)
+  end
+
+  @doc """
+  Returns a lazy stream that auto-paginates through all device tags.
+
+  ## Examples
+
+      UnifiApi.Network.Resources.stream_device_tags(client, site_id) |> Enum.to_list()
+  """
+  def stream_device_tags(client, site_id, opts \\ []) do
+    Client.stream(client, "/v1/sites/#{site_id}/device-tags", opts)
+  end
+
+  @doc """
+  Returns a lazy stream that auto-paginates through all DPI categories.
+
+  ## Examples
+
+      UnifiApi.Network.Resources.stream_dpi_categories(client) |> Enum.to_list()
+  """
+  def stream_dpi_categories(client, opts \\ []) do
+    Client.stream(client, "/v1/dpi/categories", opts)
+  end
+
+  @doc """
+  Returns a lazy stream that auto-paginates through all DPI applications.
+
+  ## Examples
+
+      UnifiApi.Network.Resources.stream_dpi_applications(client) |> Enum.to_list()
+  """
+  def stream_dpi_applications(client, opts \\ []) do
+    Client.stream(client, "/v1/dpi/applications", opts)
+  end
+
+  @doc """
+  Returns a lazy stream that auto-paginates through all countries.
+
+  ## Examples
+
+      UnifiApi.Network.Resources.stream_countries(client) |> Enum.to_list()
+  """
+  def stream_countries(client, opts \\ []) do
+    Client.stream(client, "/v1/countries", opts)
+  end
 end

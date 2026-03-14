@@ -106,4 +106,17 @@ defmodule UnifiApi.Network.ACL do
   def update_ordering(client, site_id, body) do
     Client.put(client, "/v1/sites/#{site_id}/acl-rules/ordering", body)
   end
+
+  @doc """
+  Returns a lazy stream that auto-paginates through all ACL rules.
+
+  ## Examples
+
+      UnifiApi.Network.ACL.stream(client, site_id)
+      |> Stream.filter(& &1["enabled"])
+      |> Enum.to_list()
+  """
+  def stream(client, site_id, opts \\ []) do
+    Client.stream(client, "/v1/sites/#{site_id}/acl-rules", opts)
+  end
 end

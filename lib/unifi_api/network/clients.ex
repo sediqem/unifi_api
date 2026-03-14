@@ -33,4 +33,26 @@ defmodule UnifiApi.Network.Clients do
   def list(client, site_id, opts \\ []) do
     Client.get(client, "/v1/sites/#{site_id}/clients", opts)
   end
+
+  @doc """
+  Returns a lazy stream that auto-paginates through all clients on a site.
+
+  ## Options
+
+    * `:limit` — items per page (default: 200)
+    * `:filter` — UniFi filter expression
+
+  ## Examples
+
+      # Stream all wireless clients
+      UnifiApi.Network.Clients.stream(client, site_id, filter: "type.eq(WIRELESS)")
+      |> Enum.to_list()
+
+      # Count all connected clients
+      UnifiApi.Network.Clients.stream(client, site_id)
+      |> Enum.count()
+  """
+  def stream(client, site_id, opts \\ []) do
+    Client.stream(client, "/v1/sites/#{site_id}/clients", opts)
+  end
 end

@@ -93,4 +93,18 @@ defmodule UnifiApi.Network.Hotspot do
   def delete_voucher(client, site_id, voucher_id) do
     Client.delete(client, "/v1/sites/#{site_id}/hotspot/vouchers/#{voucher_id}")
   end
+
+  @doc """
+  Returns a lazy stream that auto-paginates through all vouchers.
+
+  ## Examples
+
+      # Get all active voucher codes
+      UnifiApi.Network.Hotspot.stream_vouchers(client, site_id)
+      |> Stream.reject(& &1["expired"])
+      |> Enum.map(& &1["code"])
+  """
+  def stream_vouchers(client, site_id, opts \\ []) do
+    Client.stream(client, "/v1/sites/#{site_id}/hotspot/vouchers", opts)
+  end
 end

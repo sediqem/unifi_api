@@ -27,4 +27,21 @@ defmodule UnifiApi.Network.Sites do
   def list(client, opts \\ []) do
     Client.get(client, "/v1/sites", opts)
   end
+
+  @doc """
+  Returns a lazy stream that auto-paginates through all sites.
+
+  ## Options
+
+    * `:limit` — items per page (default: 200)
+    * `:filter` — UniFi filter expression
+
+  ## Examples
+
+      UnifiApi.Network.Sites.stream(client)
+      |> Enum.to_list()
+  """
+  def stream(client, opts \\ []) do
+    Client.stream(client, "/v1/sites", opts)
+  end
 end

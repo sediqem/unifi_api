@@ -28,4 +28,16 @@ defmodule UnifiApi.Network.TrafficMatching do
   def list(client, site_id, opts \\ []) do
     Client.get(client, "/v1/sites/#{site_id}/traffic-matching-lists", opts)
   end
+
+  @doc """
+  Returns a lazy stream that auto-paginates through all traffic matching lists.
+
+  ## Examples
+
+      UnifiApi.Network.TrafficMatching.stream(client, site_id)
+      |> Enum.to_list()
+  """
+  def stream(client, site_id, opts \\ []) do
+    Client.stream(client, "/v1/sites/#{site_id}/traffic-matching-lists", opts)
+  end
 end

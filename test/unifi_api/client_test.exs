@@ -182,4 +182,103 @@ defmodule UnifiApi.ClientTest do
                Client.get_raw(client, "/v1/snapshot", high_quality: true)
     end
   end
+
+  describe "stream/3" do
+    test "streams through multiple pages" do
+      page_count = :counters.new(1, [:atomics])
+
+      client =
+        test_client(fn conn ->
+          :counters.add(page_count, 1, 1)
+          params = Plug.Conn.fetch_query_params(conn).query_params
+          offset = String.to_integer(params["offset"] || "0")
+
+          items =
+            case offset do
+              0 -> Enum.map(1..3, &%{"id" => &1})
+              3 -> Enum.map(4..6, &%{"id" => &1})
+              6 -> [%{"id" => 7}]
+            end
+
+          Req.Test.json(conn, items)
+        end)
+
+      result = Client.stream(client, "/v1/test", limit: 3) |> Enum.to_list()
+
+      assert length(result) == 7
+      assert List.first(result)["id"] == 1
+      assert List.last(result)["id"] == 7
+      assert :counters.get(page_count, 1) == 3
+    end
+
+    test "halts when first page is smaller than limit" do
+      client =
+        test_client(fn conn ->
+          Req.Test.json(conn, [%{"id" => 1}, %{"id" => 2}])
+        end)
+
+      result = Client.stream(client, "/v1/test", limit: 5) |> Enum.to_list()
+      assert length(result) == 2
+    end
+
+    test "handles empty first page" do
+      client =
+        test_client(fn conn ->
+          Req.Test.json(conn, [])
+        end)
+
+      result = Client.stream(client, "/v1/test") |> Enum.to_list()
+      assert result == []
+    end
+
+    test "is lazy — stops fetching after Enum.take" do
+      page_count = :counters.new(1, [:atomics])
+
+      client =
+        test_client(fn conn ->
+          :counters.add(page_count, 1, 1)
+          items = Enum.map(1..3, &%{"id" => &1})
+          Req.Test.json(conn, items)
+        end)
+
+      result = Client.stream(client, "/v1/test", limit: 3) |> Enum.take(2)
+
+      assert length(result) == 2
+      assert :counters.get(page_count, 1) == 1
+    end
+
+    test "passes filter to every page request" do
+      client =
+        test_client(fn conn ->
+          params = Plug.Conn.fetch_query_params(conn).query_params
+          assert params["filter"] == "type.eq(WIRELESS)"
+
+          items =
+            if params["offset"] == "0",
+              do: [%{"id" => 1}, %{"id" => 2}],
+              else: [%{"id" => 3}]
+
+          Req.Test.json(conn, items)
+        end)
+
+      result =
+        Client.stream(client, "/v1/test", limit: 2, filter: "type.eq(WIRELESS)")
+        |> Enum.to_list()
+
+      assert length(result) == 3
+    end
+
+    test "raises on API error" do
+      client =
+        test_client(fn conn ->
+          conn
+          |> Plug.Conn.put_resp_content_type("application/json")
+          |> Plug.Conn.send_resp(500, Jason.encode!(%{"error" => "boom"}))
+        end)
+
+      assert_raise RuntimeError, ~r/stream failed/, fn ->
+        Client.stream(client, "/v1/test") |> Enum.to_list()
+      end
+    end
+  end
 end

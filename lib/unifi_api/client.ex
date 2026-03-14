@@ -150,6 +150,61 @@ defmodule UnifiApi.Client do
     end
   end
 
+  @doc """
+  Creates a lazy stream that automatically paginates through results.
+
+  Uses `Stream.resource/3` to fetch pages on demand. Each page requests
+  up to `:limit` items (default 200, the API maximum). The stream halts
+  when a page returns fewer items than the limit.
+
+  Raises on API errors.
+
+  ## Options
+
+    * `:limit` — items per page (default: 200)
+    * `:filter` — UniFi filter expression
+
+  ## Examples
+
+      # Stream all items
+      Client.stream(client, "/v1/sites/abc/devices")
+      |> Enum.to_list()
+
+      # Stream with filter, take first 10
+      Client.stream(client, "/v1/sites/abc/clients", filter: "type.eq(WIRELESS)")
+      |> Enum.take(10)
+
+      # Count all wireless clients across pages
+      Client.stream(client, "/v1/sites/abc/clients", filter: "type.eq(WIRELESS)")
+      |> Enum.count()
+  """
+  def stream(client, path, opts \\ []) do
+    page_size = opts[:limit] || 200
+    base_opts = Keyword.take(opts, [:filter])
+
+    Stream.resource(
+      fn -> 0 end,
+      fn
+        :halt ->
+          {:halt, :done}
+
+        offset ->
+          request_opts = Keyword.merge(base_opts, limit: page_size, offset: offset)
+
+          case get(client, path, request_opts) do
+            {:ok, items} when is_list(items) ->
+              if length(items) < page_size,
+                do: {items, :halt},
+                else: {items, offset + page_size}
+
+            {:error, reason} ->
+              raise "UnifiApi.Client.stream failed: #{inspect(reason)}"
+          end
+      end,
+      fn _state -> :ok end
+    )
+  end
+
   defp build_params(opts) do
     []
     |> maybe_add(:offset, opts[:offset])

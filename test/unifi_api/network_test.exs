@@ -17,6 +17,21 @@ defmodule UnifiApi.NetworkTest do
     end)
   end
 
+  defp stream_client(path) do
+    test_client(fn conn ->
+      assert conn.request_path == "/integration#{path}"
+      params = Plug.Conn.fetch_query_params(conn).query_params
+      offset = String.to_integer(params["offset"] || "0")
+
+      items =
+        if offset == 0,
+          do: [%{"id" => 1}, %{"id" => 2}],
+          else: [%{"id" => 3}]
+
+      Req.Test.json(conn, items)
+    end)
+  end
+
   defp assert_request_with_body(method, path) do
     test_client(fn conn ->
       assert conn.method == method
@@ -393,6 +408,125 @@ defmodule UnifiApi.NetworkTest do
     test "list_countries/2" do
       client = assert_request("GET", "/v1/countries")
       assert {:ok, _} = UnifiApi.Network.Resources.list_countries(client)
+    end
+  end
+
+  # --- Stream tests ---
+
+  describe "stream" do
+    @site "site-1"
+
+    test "Sites.stream/2" do
+      client = stream_client("/v1/sites")
+      assert [_, _, _] = UnifiApi.Network.Sites.stream(client, limit: 2) |> Enum.to_list()
+    end
+
+    test "Devices.stream/3" do
+      client = stream_client("/v1/sites/#{@site}/devices")
+
+      result = UnifiApi.Network.Devices.stream(client, @site, limit: 2) |> Enum.to_list()
+      assert length(result) == 3
+    end
+
+    test "Devices.stream_pending/2" do
+      client = stream_client("/v1/pending-devices")
+
+      result = UnifiApi.Network.Devices.stream_pending(client, limit: 2) |> Enum.to_list()
+      assert length(result) == 3
+    end
+
+    test "Clients.stream/3" do
+      client = stream_client("/v1/sites/#{@site}/clients")
+
+      result = UnifiApi.Network.Clients.stream(client, @site, limit: 2) |> Enum.to_list()
+      assert length(result) == 3
+    end
+
+    test "Networks.stream/3" do
+      client = stream_client("/v1/sites/#{@site}/networks")
+
+      result = UnifiApi.Network.Networks.stream(client, @site, limit: 2) |> Enum.to_list()
+      assert length(result) == 3
+    end
+
+    test "Wifi.stream/3" do
+      client = stream_client("/v1/sites/#{@site}/wifi/broadcasts")
+
+      result = UnifiApi.Network.Wifi.stream(client, @site, limit: 2) |> Enum.to_list()
+      assert length(result) == 3
+    end
+
+    test "Firewall.stream_zones/3" do
+      client = stream_client("/v1/sites/#{@site}/firewall/zones")
+
+      result =
+        UnifiApi.Network.Firewall.stream_zones(client, @site, limit: 2) |> Enum.to_list()
+
+      assert length(result) == 3
+    end
+
+    test "Firewall.stream_policies/3" do
+      client = stream_client("/v1/sites/#{@site}/firewall/policies")
+
+      result =
+        UnifiApi.Network.Firewall.stream_policies(client, @site, limit: 2) |> Enum.to_list()
+
+      assert length(result) == 3
+    end
+
+    test "Hotspot.stream_vouchers/3" do
+      client = stream_client("/v1/sites/#{@site}/hotspot/vouchers")
+
+      result =
+        UnifiApi.Network.Hotspot.stream_vouchers(client, @site, limit: 2) |> Enum.to_list()
+
+      assert length(result) == 3
+    end
+
+    test "ACL.stream/3" do
+      client = stream_client("/v1/sites/#{@site}/acl-rules")
+
+      result = UnifiApi.Network.ACL.stream(client, @site, limit: 2) |> Enum.to_list()
+      assert length(result) == 3
+    end
+
+    test "DNS.stream/3" do
+      client = stream_client("/v1/sites/#{@site}/dns/policies")
+
+      result = UnifiApi.Network.DNS.stream(client, @site, limit: 2) |> Enum.to_list()
+      assert length(result) == 3
+    end
+
+    test "TrafficMatching.stream/3" do
+      client = stream_client("/v1/sites/#{@site}/traffic-matching-lists")
+
+      result =
+        UnifiApi.Network.TrafficMatching.stream(client, @site, limit: 2) |> Enum.to_list()
+
+      assert length(result) == 3
+    end
+
+    test "Resources.stream_wans/3" do
+      client = stream_client("/v1/sites/#{@site}/wans")
+
+      result = UnifiApi.Network.Resources.stream_wans(client, @site, limit: 2) |> Enum.to_list()
+      assert length(result) == 3
+    end
+
+    test "Resources.stream_dpi_categories/2" do
+      client = stream_client("/v1/dpi/categories")
+
+      result =
+        UnifiApi.Network.Resources.stream_dpi_categories(client, limit: 2) |> Enum.to_list()
+
+      assert length(result) == 3
+    end
+
+    test "Resources.stream_countries/2" do
+      client = stream_client("/v1/countries")
+
+      result = UnifiApi.Network.Resources.stream_countries(client, limit: 2) |> Enum.to_list()
+      assert length(result) == 3
     end
   end
 end

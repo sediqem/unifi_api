@@ -600,6 +600,142 @@ protect_inventory = %{
 }
 ```
 
+### Dashboard data scraper
+
+Pull everything you need for a custom dashboard in one shot — network overview,
+client breakdown, device health, WiFi status, and Protect camera states.
+
+```elixir
+client = UnifiApi.new()
+
+# Get controller info
+{:ok, info} = UnifiApi.Network.Info.get_info(client)
+
+# Collect per-site data
+sites_data =
+  UnifiApi.Network.Sites.stream(client)
+  |> Enum.map(fn site ->
+    sid = site["id"]
+
+    # Clients grouped by type
+    clients = UnifiApi.Network.Clients.stream(client, sid) |> Enum.to_list()
+
+    client_breakdown =
+      clients
+      |> Enum.group_by(& &1["type"])
+      |> Map.new(fn {type, list} -> {type, length(list)} end)
+
+    # Devices with health status
+    devices =
+      UnifiApi.Network.Devices.stream(client, sid)
+      |> Enum.map(fn d ->
+        %{
+          name: d["name"],
+          mac: d["mac"],
+          model: d["model"],
+          state: d["state"],
+          ip: d["ip"]
+        }
+      end)
+
+    connected_devices = Enum.count(devices, & &1.state == "CONNECTED")
+    disconnected_devices = Enum.count(devices, & &1.state == "DISCONNECTED")
+
+    # Networks
+    networks =
+      UnifiApi.Network.Networks.stream(client, sid)
+      |> Enum.map(&Map.take(&1, ["id", "name", "vlanId"]))
+
+    # WiFi SSIDs
+    ssids =
+      UnifiApi.Network.Wifi.stream(client, sid)
+      |> Enum.map(&Map.take(&1, ["id", "name", "enabled"]))
+
+    # WANs
+    wans =
+      UnifiApi.Network.Resources.stream_wans(client, sid)
+      |> Enum.map(&Map.take(&1, ["id", "name", "status"]))
+
+    %{
+      site_id: sid,
+      site_name: site["name"],
+      clients: %{
+        total: length(clients),
+        wired: client_breakdown["WIRED"] || 0,
+        wireless: client_breakdown["WIRELESS"] || 0,
+        vpn: client_breakdown["VPN"] || 0,
+        teleport: client_breakdown["TELEPORT"] || 0
+      },
+      devices: %{
+        total: length(devices),
+        connected: connected_devices,
+        disconnected: disconnected_devices,
+        list: devices
+      },
+      networks: networks,
+      ssids: ssids,
+      wans: wans
+    }
+  end)
+
+# Protect overview
+{:ok, cameras} = UnifiApi.Protect.Cameras.list(client)
+{:ok, sensors} = UnifiApi.Protect.Sensors.list(client)
+{:ok, lights} = UnifiApi.Protect.Lights.list(client)
+{:ok, nvr} = UnifiApi.Protect.NVR.get(client)
+
+protect_data = %{
+  nvr: Map.take(nvr, ["id", "name", "modelKey"]),
+  cameras: %{
+    total: length(cameras),
+    connected: Enum.count(cameras, & &1["state"] == "CONNECTED"),
+    list:
+      Enum.map(cameras, fn c ->
+        %{
+          id: c["id"],
+          name: c["name"],
+          state: c["state"],
+          model: c["modelKey"]
+        }
+      end)
+  },
+  sensors: %{
+    total: length(sensors),
+    open_doors: Enum.count(sensors, & &1["isOpened"]),
+    motion_detected: Enum.count(sensors, & &1["isMotionDetected"])
+  },
+  lights: %{
+    total: length(lights),
+    on: Enum.count(lights, & &1["isLightOn"])
+  }
+}
+
+# Full dashboard payload
+dashboard = %{
+  controller_version: info["applicationVersion"],
+  scraped_at: DateTime.utc_now(),
+  sites: sites_data,
+  protect: protect_data
+}
+
+# Write to JSON
+File.write!("dashboard.json", Jason.encode!(dashboard, pretty: true))
+```
+
+You can run this on an interval to feed a time-series database, or serve it
+from a Phoenix endpoint for a live dashboard:
+
+```elixir
+# Poll every 30 seconds and write fresh data
+Stream.interval(30_000)
+|> Stream.each(fn _ ->
+  # ... same scraper logic above ...
+  File.write!("dashboard.json", Jason.encode!(dashboard, pretty: true))
+  IO.puts("[#{DateTime.utc_now()}] Dashboard updated")
+end)
+|> Stream.run()
+```
+
 ## Error Handling
 
 All functions return `{:ok, body}` on success or `{:error, reason}` on failure:

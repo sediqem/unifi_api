@@ -2,17 +2,21 @@ defmodule UnifiApi.Formatter do
   @moduledoc """
   Pretty-prints API responses as colored ANSI tables in iex.
 
+  Handles both raw lists and wrapped responses (`%{"data" => [...]}`).
+
   ## Examples
 
       {:ok, devices} = UnifiApi.Network.Devices.list(client, site_id)
-      UnifiApi.Formatter.table(devices, ["name", "mac", "model", "state"])
+      UnifiApi.Formatter.devices(devices)
 
       {:ok, clients} = UnifiApi.Network.Clients.list(client, site_id)
-      UnifiApi.Formatter.table(clients, ["name", "ipAddress", "type"])
+      UnifiApi.Formatter.clients(clients)
   """
 
   @doc """
   Prints a list of maps as a colored ANSI table.
+
+  Accepts a plain list or a wrapped response (`%{"data" => [...]}`).
 
   ## Options
 
@@ -21,14 +25,20 @@ defmodule UnifiApi.Formatter do
 
   ## Examples
 
-      UnifiApi.Formatter.table(devices, ["name", "mac", "state"], title: "Devices")
+      UnifiApi.Formatter.table(devices, ["name", "macAddress", "state"], title: "Devices")
 
       UnifiApi.Formatter.table(clients, ["name", "ipAddress", "type"],
         title: "Connected Clients",
         colors: %{"type" => :type}
       )
   """
-  def table(rows, columns, opts \\ []) when is_list(rows) and is_list(columns) do
+  def table(data, columns, opts \\ [])
+
+  def table(%{"data" => rows}, columns, opts) when is_list(rows) do
+    table(rows, columns, opts)
+  end
+
+  def table(rows, columns, opts) when is_list(rows) and is_list(columns) do
     title = opts[:title]
     color_rules = opts[:colors] || %{}
 
@@ -56,6 +66,8 @@ defmodule UnifiApi.Formatter do
   @doc """
   Prints a single map as a colored key-value detail view.
 
+  Handles wrapped responses (`%{"data" => %{...}}`).
+
   ## Examples
 
       {:ok, device} = UnifiApi.Network.Devices.get(client, site_id, device_id)
@@ -64,7 +76,10 @@ defmodule UnifiApi.Formatter do
       {:ok, nvr} = UnifiApi.Protect.NVR.get(client)
       UnifiApi.Formatter.detail(nvr, title: "NVR Info")
   """
-  def detail(map, opts \\ []) when is_map(map) do
+  def detail(data, opts \\ [])
+  def detail(%{"data" => map}, opts) when is_map(map), do: detail(map, opts)
+
+  def detail(map, opts) when is_map(map) do
     title = opts[:title]
     keys = opts[:keys] || Map.keys(map) |> Enum.sort()
 
@@ -94,8 +109,8 @@ defmodule UnifiApi.Formatter do
       {:ok, devices} = UnifiApi.Network.Devices.list(client, site_id)
       UnifiApi.Formatter.devices(devices)
   """
-  def devices(rows) do
-    table(rows, ["name", "mac", "model", "state", "ip"],
+  def devices(data) do
+    table(data, ["name", "macAddress", "model", "state", "ipAddress"],
       title: "Devices",
       colors: %{"state" => :state}
     )
@@ -109,8 +124,8 @@ defmodule UnifiApi.Formatter do
       {:ok, clients} = UnifiApi.Network.Clients.list(client, site_id)
       UnifiApi.Formatter.clients(clients)
   """
-  def clients(rows) do
-    table(rows, ["name", "ipAddress", "mac", "type"],
+  def clients(data) do
+    table(data, ["name", "ipAddress", "macAddress", "type"],
       title: "Connected Clients",
       colors: %{"type" => :type}
     )
@@ -124,8 +139,8 @@ defmodule UnifiApi.Formatter do
       {:ok, cameras} = UnifiApi.Protect.Cameras.list(client)
       UnifiApi.Formatter.cameras(cameras)
   """
-  def cameras(rows) do
-    table(rows, ["name", "modelKey", "state", "mac"],
+  def cameras(data) do
+    table(data, ["name", "modelKey", "state", "mac"],
       title: "Cameras",
       colors: %{"state" => :state}
     )
@@ -139,8 +154,8 @@ defmodule UnifiApi.Formatter do
       {:ok, networks} = UnifiApi.Network.Networks.list(client, site_id)
       UnifiApi.Formatter.networks(networks)
   """
-  def networks(rows) do
-    table(rows, ["name", "vlanId", "id"], title: "Networks")
+  def networks(data) do
+    table(data, ["name", "vlanId", "id"], title: "Networks")
   end
 
   @doc """
@@ -151,8 +166,8 @@ defmodule UnifiApi.Formatter do
       {:ok, sites} = UnifiApi.Network.Sites.list(client)
       UnifiApi.Formatter.sites(sites)
   """
-  def sites(rows) do
-    table(rows, ["name", "id", "internalReference"], title: "Sites")
+  def sites(data) do
+    table(data, ["name", "id", "internalReference"], title: "Sites")
   end
 
   # --- Private ---
@@ -208,9 +223,9 @@ defmodule UnifiApi.Formatter do
 
   defp get_color(value, :state) do
     case value do
-      "CONNECTED" -> IO.ANSI.green()
-      "CONNECTING" -> IO.ANSI.yellow()
-      "DISCONNECTED" -> IO.ANSI.red()
+      v when v in ["CONNECTED", "ONLINE"] -> IO.ANSI.green()
+      v when v in ["CONNECTING", "UPDATING"] -> IO.ANSI.yellow()
+      v when v in ["DISCONNECTED", "OFFLINE"] -> IO.ANSI.red()
       _ -> ""
     end
   end
